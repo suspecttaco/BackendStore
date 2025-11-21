@@ -1,4 +1,4 @@
-# File BackendStore/app.py
+# File app.py
 from flask import Flask
 from config import Config
 from models import db
@@ -6,6 +6,9 @@ from models import db
 # Importar modelos
 from models.user import User
 from models.product import Product
+from models.sale import Sale
+from models.sale_detail import SaleDetail
+from models.stock_alert import StockAlert
 
 def create_app():
     app = Flask(__name__)

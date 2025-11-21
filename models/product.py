@@ -1,4 +1,4 @@
-# File BackendStore/models/product.py
+# File models/product.py
 from datetime import datetime
 from . import db
 

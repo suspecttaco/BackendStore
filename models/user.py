@@ -1,4 +1,4 @@
-# File BackendStore/models/user.py
+# File models/user.py
 from datetime import datetime
 from enum import unique
 

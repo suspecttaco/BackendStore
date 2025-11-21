@@ -1,4 +1,4 @@
-# File: BackendStore/config.py
+# File: config.py
 import os
 from dotenv import load_dotenv
 
