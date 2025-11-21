@@ -2,6 +2,7 @@
 from flask import Flask
 from config import Config
 from models import db
+from flask_cors import CORS
 
 # Importar modelos
 from models.user import User
@@ -15,12 +16,24 @@ from routes.auth import auth_bp
 from routes.products import products_bp
 from routes.sales import sales_bp
 
+# Importar servicio de sockets
+from services.socket_events import socketio, register_socket_events
+from services.stock_monitor import StockMonitor
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # Permitir CORS
+    CORS(app)
+
     # Inicializar BD
     db.init_app(app)
+
+    # Inicializar SocketIO con la app
+    # cors_allowed_origins="*" para que no de lata a la hora de conectarse en C#
+    socketio.init_app(app, cors_allowed_origins="*")
+    register_socket_events(socketio)
 
     # Registro de rutas
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -36,5 +49,10 @@ if __name__ == "__main__":
         db.create_all()
         print("all tables and routes created successfully")
 
+        # Iniciar monitor de stock
+        monitor = StockMonitor(app)
+        monitor.start()
+
     print("Server running at http://localhost:5000")
-    app.run(debug=True)
+    # Cambio de app.run a sockekio.run
+    socketio.run(app, debug=True, port=5000)
