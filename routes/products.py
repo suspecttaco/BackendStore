@@ -30,7 +30,7 @@ def search_products():
     return jsonify([p.to_dict() for p in products]), 200
 
 # CREAR
-@products_bp.route('/', methods=['GET'])
+@products_bp.route('/', methods=['POST'])
 def create_product():
     data = request.get_json()
 

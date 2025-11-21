@@ -10,7 +10,7 @@ from models.product import Product
 
 sales_bp = Blueprint('sales', __name__)
 
-@sales_bp.route('/', method=['POST'])
+@sales_bp.route('/', methods=['POST'])
 def register_sale():
     data = request.get_json()
 

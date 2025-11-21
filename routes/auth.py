@@ -39,7 +39,7 @@ def login():
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({'error': 'Faltan datos'}), 400
 
-    user = User.query.filter_by(username=data['username'].first())
+    user = User.query.filter_by(username=data['username']).first()
 
     # Validacion usando hash
     if user and check_password_hash(user.password, data['password']):
