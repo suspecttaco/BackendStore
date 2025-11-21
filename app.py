@@ -40,6 +40,13 @@ def create_app():
     app.register_blueprint(products_bp, url_prefix='/api/products')
     app.register_blueprint(sales_bp, url_prefix='/api/sales')
 
+    if not getattr(app, 'monitor_started', False):
+        # Iniciar monitor de stock
+        monitor = StockMonitor(app)
+        monitor.start()
+        app.monitor_started = True
+        print("monitor started")
+
     return app
 
 if __name__ == "__main__":
@@ -49,10 +56,8 @@ if __name__ == "__main__":
         db.create_all()
         print("all tables and routes created successfully")
 
-        # Iniciar monitor de stock
-        monitor = StockMonitor(app)
-        monitor.start()
+
 
     print("Server running at http://localhost:5000")
     # Cambio de app.run a sockekio.run
-    socketio.run(app, debug=True, port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
