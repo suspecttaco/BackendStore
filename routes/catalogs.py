@@ -61,7 +61,7 @@ def update_category(id):
         if 'active' in data: category.active = data['active']
 
         db.session.commit()
-        return jsonify({'message': 'Category updated successfully'}), 200
+        return jsonify({'message': 'Categoria actualizada'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -71,7 +71,7 @@ def delete_category(id):
     category = Category.query.get_or_404(id)
     category.active = False # Soft-delete
     db.session.commit()
-    return jsonify({'message': 'Category deleted (soft)'}), 200
+    return jsonify({'message': 'Categoria desactivada'}), 200
 
 # Proveedores
 @catalogs_bp.route('/suppliers', methods=['GET'])
@@ -126,7 +126,7 @@ def update_supplier(id):
         if 'active' in data: supplier.active = data['active']
 
         db.session.commit()
-        return jsonify({'message': 'Supplier updated'}), 200
+        return jsonify({'message': 'Proveedor actualizado'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -136,7 +136,7 @@ def delete_supplier(id):
     supplier = Supplier.query.get_or_404(id)
     supplier.active = False  # Soft-delete
     db.session.commit()
-    return jsonify({'message': 'Supplier deleted'}), 200
+    return jsonify({'message': 'Proveedor desactivado'}), 200
 
 # Clientes
 @catalogs_bp.route('/customers', methods=['POST'])
@@ -189,7 +189,7 @@ def update_customer(id):
         if 'active' in data: customer.active = data['active']
 
         db.session.commit()
-        return jsonify({'message': 'Customer updated'}), 200
+        return jsonify({'message': 'Cliente actualizado'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -199,4 +199,4 @@ def delete_customer(id):
     customer = Customer.query.get_or_404(id)
     customer.active = False  # Soft-delete
     db.session.commit()
-    return jsonify({'message': 'Customer deleted'}), 200
+    return jsonify({'message': 'Cliente desactivado'}), 200
