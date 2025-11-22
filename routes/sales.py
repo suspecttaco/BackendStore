@@ -1,11 +1,10 @@
 # File routes/sales.py
 import threading
-
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from models import db
 from models.product import Product
-from models.sale import Sale
-from models.sale_detail import SaleDetail
+from models.sale import Sale, SaleDetail
 from services.socket_events import socketio
 
 sales_bp = Blueprint('sales', __name__)
@@ -19,7 +18,6 @@ def register_sale():
     if not data or 'user_id' not in data or 'products' not in data:
         return jsonify({'error': 'Datos incompletos'}), 400
 
-    user_id = data['user_id']
     items = data['products']
 
     if not items:
@@ -30,23 +28,24 @@ def register_sale():
             # Inicio de transaccion segura
             # Crear header de venta
             new_sale = Sale(
-                user_id=user_id,
+                user_id=data['user_id'],
+                customer_id=data.get('customer_id'),
                 total=0,
+                payment_method=data.get('payment_method', 'cash'),
+                date=datetime.utcnow()
             )
             db.session.add(new_sale)
             db.session.flush()
 
-            total = 0
+            total_amount = 0
 
             # Procesado de cada producto
             for item in items:
-                product_id = item['product_id']
+                product = Product.query.get(item['product_id'])
                 amount = float(item['amount'])
 
-                product = Product.query.get(product_id)
-
                 if not product or not product.active:
-                    raise Exception(f"Producto ID {product_id} no disponible")
+                    raise Exception(f"Producto ID {item['id']} no disponible")
 
                 if float(product.actual_stock) < amount:
                     raise Exception(f"Stock insuficiente para: {product.name}")
@@ -57,7 +56,7 @@ def register_sale():
                 # Calcular subtotal
                 price = float(product.sell_price)
                 subtotal = price * amount
-                total += subtotal
+                total_amount += subtotal
 
                 # Crear Detalle de Venta
                 detail = SaleDetail(
@@ -71,12 +70,12 @@ def register_sale():
                 db.session.add(detail)
 
             # Actualizar total final y guardar
-            new_sale.total = total
+            new_sale.total = total_amount
             db.session.commit()
             # Fin de transaccion segura
 
             # Notificacion por socket
-            socketio.emit('inventory updated',{
+            socketio.emit('inventory_updated',{
                 'message': 'Nueva venta registrada',
                 'sale_id': new_sale.id
             })
@@ -84,7 +83,7 @@ def register_sale():
             return jsonify({
                 'message': 'Venta registrada',
                 'sale_id': new_sale.id,
-                'total': total
+                'total': total_amount
             }), 201
 
         except Exception as e:

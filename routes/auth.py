@@ -10,9 +10,7 @@ auth_bp = Blueprint('auth', __name__)
 def register():
     data = request.get_json()
 
-    if not data or not data.get('username') or not data.get('password'):
-        return jsonify({'error': 'Faltan datos'}), 400
-
+    # Verificar existencia
     if User.query.filter_by(username=data['username']).first():
         return jsonify({'error': 'El usuario ya existe'}), 400
 
@@ -22,7 +20,7 @@ def register():
     new_user = User(
         username=data['username'],
         password=hashed_password,
-        full_name=data.get('full_name'),
+        full_name=data.get('full_name', ''),
         role=data.get('role', 'cashier')
     )
 
@@ -36,7 +34,7 @@ def login():
     data = request.get_json()
 
     # Validar que enviaron datos
-    if not data or not data.get('username') or not data.get('password'):
+    if not data or 'username' not in data or 'password' not in data:
         return jsonify({'error': 'Faltan datos'}), 400
 
     user = User.query.filter_by(username=data['username']).first()
@@ -48,7 +46,8 @@ def login():
 
         return jsonify({
             'message': 'Login exitoso',
-            'user': user.to_dict()
+            'user': user.to_dict(),
+            'token': 'dummy_token_for_mvp'
         }), 200
 
     return jsonify({'error': 'Credenciales invalidas'}), 401

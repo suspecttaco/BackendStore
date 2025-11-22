@@ -5,16 +5,17 @@ from models import db
 from flask_cors import CORS
 
 # Importar modelos
-from models.user import User
-from models.product import Product
-from models.sale import Sale
-from models.sale_detail import SaleDetail
-from models.stock_alert import StockAlert
+from models.user import User, Permission, AuditLog, Shift, CashWithdrawal
+from models.catalogs import Category, Supplier, Customer
+from models.product import Product, StockAlert, Promotion
+from models.sale import Sale, SaleDetail, Return, ReturnDetail
+from models.finance import Purchase, PurchaseDetail, AccountReceivable, Payment
 
 # Importar Blueprints
 from routes.auth import auth_bp
 from routes.products import products_bp
 from routes.sales import sales_bp
+from routes.catalogs import catalogs_bp
 
 # Importar servicio de sockets
 from services.socket_events import socketio, register_socket_events
@@ -39,6 +40,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(products_bp, url_prefix='/api/products')
     app.register_blueprint(sales_bp, url_prefix='/api/sales')
+    app.register_blueprint(catalogs_bp, url_prefix='/api/catalogs')
 
     if not getattr(app, 'monitor_started', False):
         # Iniciar monitor de stock
@@ -55,8 +57,6 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         print("all tables and routes created successfully")
-
-
 
     print("Server running at http://localhost:5000")
     # Cambio de app.run a sockekio.run

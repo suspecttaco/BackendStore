@@ -14,6 +14,12 @@ def get_products():
     products = Product.query.filter_by(active=True).all()
     return jsonify([p.to_dict() for p in products]), 200
 
+# Obtener uno
+@products_bp.route('/<int:id>', methods=['GET'])
+def get_product(id):
+    product = Product.query.get_or_404(id)
+    return jsonify(product.to_dict()), 200
+
 # BUSCAR (Nombre o codigo)
 @products_bp.route('/search', methods=['GET'])
 def search_products():
@@ -41,8 +47,8 @@ def create_product():
             description=data.get('description'),
             buy_price=data.get('buy_price'),
             sell_price=data['sell_price'],
-            actual_stock=data.get('actual_stock', 0),
-            minimum_stock=data.get('minimum_stock', 5)
+            actual_stock=data.get('stock', 0),
+            minimum_stock=data.get('min_stock', 5)
         )
 
         db.session.add(new_product)
@@ -61,13 +67,19 @@ def update_product(id):
     data = request.get_json()
 
     try:
-        if 'code' in data: product.code = data['code']
+        if 'code' in data and data['code'] != product.code:
+            existing = Product.query.filter_by(code=data['code']).first()
+            if existing:
+                return jsonify({'error': 'EL codigo del producto ya existe'}), 400
+            product.code = data['code']
+
         if 'name' in data: product.name = data['name']
         if 'description' in data: product.description = data['description']
+        if 'category_id' in data: product.category_id = data['category_id']
         if 'buy_price' in data: product.buy_price = data['buy_price']
         if 'sell_price' in data: product.sell_price = data['sell_price']
-        if 'actual_stock' in data: product.actual_stock = data['actual_stock']
-        if 'minimum_stock' in data: product.minimum_stock = data['minimum_stock']
+        if 'stock' in data: product.actual_stock = data['stock']
+        if 'min_stock' in data: product.minimum_stock = data['min_stock']
         if 'active' in data: product.active = data['active']
 
         db.session.commit()
