@@ -1,0 +1,19 @@
+# Framework y Extensiones
+Flask
+Flask-SQLAlchemy
+Flask-SocketIO
+Flask-Cors
+
+# Base de Datos
+PyMySQL
+cryptography
+
+# Variables de Entorno
+python-dotenv
+
+# Servidores y Concurrencia (Prod & Dev)
+simple-websocket
+eventlet
+gunicorn
+
+# Ejecutar con: pip install -r requirements.txt
