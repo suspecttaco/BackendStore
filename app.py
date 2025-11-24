@@ -19,6 +19,7 @@ from routes.auth import auth_bp
 from routes.products import products_bp
 from routes.sales import sales_bp
 from routes.catalogs import catalogs_bp
+from routes.dashboard import dashboard_bp
 
 # Importar servicio de sockets
 from services.socket_events import socketio, register_socket_events
@@ -44,6 +45,7 @@ def create_app():
     app.register_blueprint(products_bp, url_prefix='/api/products')
     app.register_blueprint(sales_bp, url_prefix='/api/sales')
     app.register_blueprint(catalogs_bp, url_prefix='/api/catalogs')
+    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 
     if not getattr(app, 'monitor_started', False):
         # Iniciar monitor de stock
