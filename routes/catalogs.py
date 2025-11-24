@@ -1,25 +1,36 @@
 # File routes/catalogs.py
 from flask import Blueprint, request, jsonify
-
 from models import db
 from models.catalogs import Category, Supplier, Customer
 
 catalogs_bp = Blueprint('catalogs', __name__)
 
-# Categorias
+
+# ==========================================
+# 1. CATEGORIES (Categorías)
+# ==========================================
+
 @catalogs_bp.route('/categories', methods=['GET'])
 def get_categories():
-    cats = Category.query.filter_by(active=True).all()
-    result = []
+    # CORRECCIÓN: Leer parámetro ?all=true
+    show_all = request.args.get('all', 'false').lower() == 'true'
 
+    query = Category.query
+    if not show_all:
+        query = query.filter_by(active=True)
+
+    cats = query.all()
+    result = []
     for c in cats:
         result.append({
             'id': c.id,
             'name': c.name,
-            'parent_id': c.parent_id
+            'description': c.description,
+            'parent_id': c.parent_id,
+            'active': c.active
         })
-
     return jsonify(result), 200
+
 
 @catalogs_bp.route('/categories/<int:id>', methods=['GET'])
 def get_category(id):
@@ -32,22 +43,23 @@ def get_category(id):
         'active': category.active
     }), 200
 
+
 @catalogs_bp.route('/categories', methods=['POST'])
 def create_category():
     data = request.get_json()
-
     if not data or 'name' not in data:
-        return jsonify({'error': 'Datos incompletos'}), 400
+        return jsonify({'error': 'Name is required'}), 400
 
     new_cat = Category(
         name=data['name'],
         description=data.get('description'),
-        parent_id=data.get('parent_id')
+        parent_id=data.get('parent_id'),
+        active=data.get('active', True)
     )
-
     db.session.add(new_cat)
     db.session.commit()
     return jsonify({'id': new_cat.id, 'name': new_cat.name}), 201
+
 
 @catalogs_bp.route('/categories/<int:id>', methods=['PUT'])
 def update_category(id):
@@ -61,27 +73,44 @@ def update_category(id):
         if 'active' in data: category.active = data['active']
 
         db.session.commit()
-        return jsonify({'message': 'Categoria actualizada'}), 200
+        return jsonify({'message': 'Category updated successfully'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
 @catalogs_bp.route('/categories/<int:id>', methods=['DELETE'])
 def delete_category(id):
     category = Category.query.get_or_404(id)
-    category.active = False # Soft-delete
+    category.active = False
     db.session.commit()
-    return jsonify({'message': 'Categoria desactivada'}), 200
+    return jsonify({'message': 'Category deleted (soft)'}), 200
 
-# Proveedores
+
+# ==========================================
+# 2. SUPPLIERS (Proveedores)
+# ==========================================
+
 @catalogs_bp.route('/suppliers', methods=['GET'])
 def get_suppliers():
-    suppliers = Supplier.query.filter_by()
+    # CORRECCIÓN: Leer parámetro ?all=true
+    show_all = request.args.get('all', 'false').lower() == 'true'
+
+    query = Supplier.query
+    if not show_all:
+        query = query.filter_by(active=True)
+
+    suppliers = query.all()
     return jsonify([{
         'id': s.id,
         'name': s.name,
-        'contact': s.contact_name
-    } for s in suppliers])
+        'contact': s.contact_name,
+        'phone': s.phone,
+        'email': s.email,
+        'address': s.address,
+        'active': s.active
+    } for s in suppliers]), 200
+
 
 @catalogs_bp.route('/suppliers/<int:id>', methods=['GET'])
 def get_supplier(id):
@@ -96,21 +125,25 @@ def get_supplier(id):
         'active': supplier.active
     }), 200
 
+
 @catalogs_bp.route('/suppliers', methods=['POST'])
 def create_supplier():
     data = request.get_json()
+    if not data or 'name' not in data:
+        return jsonify({'error': 'Name is required'}), 400
 
     new_sup = Supplier(
         name=data['name'],
         contact_name=data.get('contact_name'),
         phone=data.get('phone'),
         email=data.get('email'),
-        address=data.get['address']
+        address=data.get('address'),
+        active=data.get('active', True)
     )
-
     db.session.add(new_sup)
     db.session.commit()
-    return jsonify({'id': new_sup.id, 'message': 'Proveedor creado'}), 201
+    return jsonify({'id': new_sup.id, 'message': 'Supplier created'}), 201
+
 
 @catalogs_bp.route('/suppliers/<int:id>', methods=['PUT'])
 def update_supplier(id):
@@ -126,28 +159,44 @@ def update_supplier(id):
         if 'active' in data: supplier.active = data['active']
 
         db.session.commit()
-        return jsonify({'message': 'Proveedor actualizado'}), 200
+        return jsonify({'message': 'Supplier updated'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
 @catalogs_bp.route('/suppliers/<int:id>', methods=['DELETE'])
 def delete_supplier(id):
     supplier = Supplier.query.get_or_404(id)
-    supplier.active = False  # Soft-delete
+    supplier.active = False
     db.session.commit()
-    return jsonify({'message': 'Proveedor desactivado'}), 200
+    return jsonify({'message': 'Supplier deleted'}), 200
 
-# Clientes
-@catalogs_bp.route('/customers', methods=['POST'])
+
+# ==========================================
+# 3. CUSTOMERS (Clientes)
+# ==========================================
+
+@catalogs_bp.route('/customers', methods=['GET'])
 def get_customers():
-    customers = Customer.query.filter_by(active=True).all()
+    # CORRECCIÓN: Leer parámetro ?all=true
+    show_all = request.args.get('all', 'false').lower() == 'true'
+
+    query = Customer.query
+    if not show_all:
+        query = query.filter_by(active=True)
+
+    customers = query.all()
     return jsonify([{
         'id': c.id,
         'name': c.name,
+        'phone': c.phone,
+        'address': c.address,
         'credit_limit': float(c.credit_limit),
-        'balance': float(c.current_balance)
+        'balance': float(c.current_balance),
+        'active': c.active
     } for c in customers]), 200
+
 
 @catalogs_bp.route('/customers/<int:id>', methods=['GET'])
 def get_customer(id):
@@ -162,18 +211,24 @@ def get_customer(id):
         'active': customer.active
     }), 200
 
+
 @catalogs_bp.route('/customers', methods=['POST'])
 def create_customer():
     data = request.get_json()
+    if not data or 'name' not in data:
+        return jsonify({'error': 'Name is required'}), 400
+
     new_cust = Customer(
         name=data['name'],
         phone=data.get('phone'),
         address=data.get('address'),
-        credit_limit=data.get('credit_limit', 0)
+        credit_limit=data.get('credit_limit', 0),
+        active=data.get('active', True)
     )
     db.session.add(new_cust)
     db.session.commit()
-    return jsonify({'id': new_cust.id, 'message': 'Cliente creado'}), 201
+    return jsonify({'id': new_cust.id, 'message': 'Customer created'}), 201
+
 
 @catalogs_bp.route('/customers/<int:id>', methods=['PUT'])
 def update_customer(id):
@@ -185,18 +240,18 @@ def update_customer(id):
         if 'phone' in data: customer.phone = data['phone']
         if 'address' in data: customer.address = data['address']
         if 'credit_limit' in data: customer.credit_limit = data['credit_limit']
-        # OJO: current_balance no se edita aquí, se edita por ventas/pagos
         if 'active' in data: customer.active = data['active']
 
         db.session.commit()
-        return jsonify({'message': 'Cliente actualizado'}), 200
+        return jsonify({'message': 'Customer updated'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
 @catalogs_bp.route('/customers/<int:id>', methods=['DELETE'])
 def delete_customer(id):
     customer = Customer.query.get_or_404(id)
-    customer.active = False  # Soft-delete
+    customer.active = False
     db.session.commit()
-    return jsonify({'message': 'Cliente desactivado'}), 200
+    return jsonify({'message': 'Customer deleted'}), 200

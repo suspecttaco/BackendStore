@@ -10,8 +10,16 @@ products_bp = Blueprint('products', __name__)
 # Listar todos
 @products_bp.route('/', methods=['GET'])
 def get_products():
-    # Mostrar solo productos activos
-    products = Product.query.filter_by(active=True).all()
+    # Detectar parámetro ?all=true en la URL
+    show_all = request.args.get('all', 'false').lower() == 'true'
+
+    query = Product.query
+
+    # Si NO piden todos, filtramos solo los activos (comportamiento por defecto)
+    if not show_all:
+        query = query.filter_by(active=True)
+
+    products = query.all()
     return jsonify([p.to_dict() for p in products]), 200
 
 # Obtener uno
@@ -43,10 +51,10 @@ def create_product():
     try:
         new_product = Product(
             code=data.get('code'),
-            name=data['name'],
+            name=data.get('name'),
             description=data.get('description'),
             buy_price=data.get('buy_price'),
-            sell_price=data['sell_price'],
+            sell_price=data.get('sell_price'),
             actual_stock=data.get('stock', 0),
             minimum_stock=data.get('min_stock', 5)
         )
