@@ -19,7 +19,7 @@ def get_dashboard_stats():
 
         # Total ventas hoy
         sales_count_today = db.session.query(func.count(Sale.total))\
-        .filter(cast(Sale.date, Date) == today).scalar or 0
+        .filter(cast(Sale.date, Date) == today).scalar() or 0
 
         # Conteo de productos con stock bajo
         low_stock_count = Product.query.filter(
@@ -28,7 +28,7 @@ def get_dashboard_stats():
         ).count()
 
         # Total de productos activos
-        total_products = Product.query.filter(active=True).count()
+        total_products = Product.query.filter_by(active=True).count()
 
         return jsonify({
             'total_sales': float(total_sales_today),
