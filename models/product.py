@@ -33,9 +33,13 @@ class Product(db.Model):
             'id': self.id,
             'code': self.code,
             'name': self.name,
+            'description': self.description,
+            'buy_price': self.buy_price,
             'sell_price': float(self.sell_price),
             'stock': float(self.actual_stock),
-            'category_id': self.category_id
+            'min_stock': float(self.minimum_stock),
+            'category_id': self.category_id,
+            'active': self.active
         }
 
 

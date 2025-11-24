@@ -1,4 +1,7 @@
 # File app.py
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask
 from config import Config
 from models import db
@@ -45,7 +48,7 @@ def create_app():
     if not getattr(app, 'monitor_started', False):
         # Iniciar monitor de stock
         monitor = StockMonitor(app)
-        monitor.start()
+        socketio.start_background_task(monitor.run)
         app.monitor_started = True
         print("monitor started")
 
