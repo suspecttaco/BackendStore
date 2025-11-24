@@ -1,6 +1,8 @@
 # File routes/sales.py
 import threading
 from datetime import datetime
+
+from dns.e164 import query
 from flask import Blueprint, request, jsonify
 from models import db
 from models.product import Product
@@ -10,6 +12,57 @@ from services.socket_events import socketio
 sales_bp = Blueprint('sales', __name__)
 
 sale_lock = threading.Lock()
+
+# Obtener ventas
+@sales_bp.route('/', methods=['GET'])
+def get_sales():
+    # Filtro de fecha
+    start_date = request.args.get('start')
+    end_date = request.args.get('end')
+
+    query = Sale.query.order_by(Sale.date.desc())
+
+    if start_date:
+        query = query.filter(Sale.date >= start_date)
+    if end_date:
+        query = query.filter(Sale.date <= end_date)
+
+    sales = query.all()
+
+    result = []
+
+    for s in sales:
+        result.append({
+            'id': s.id,
+            'date': s.date.isoformat(),
+            'total': float(s.total),
+            'payment_method': s.payment_method,
+            'user': s.user.full_name if s.user else 'Desconocido',
+            'customer': s.customer.name if s.customer else 'Publico General'
+        })
+
+    return jsonify(result), 200
+
+# Obtener venta especifica
+@sales_bp.route('/<int:id>', methods=['GET'])
+def get_sale_details(id):
+    sale = Sale.query.get_or_404(id)
+
+    # Regresar venta con productos
+    return jsonify({
+        'id': sale.id,
+        'date': sale.date.isoformat(),
+        'total': float(sale.total),
+        'payment_method': sale.payment_method,
+        'user': sale.user.full_name if sale.user else 'N/A',
+        'customer': sale.customer.name if sale.customer else 'Público General',
+        'products': [{
+            'product_name': d.product.name if d.product else 'Borrado',
+            'amount': float(d.amount),
+            'unit_price': float(d.unit_price),
+            'subtotal': float(d.subtotal)
+        } for d in sale.details]
+    }), 200
 
 @sales_bp.route('/', methods=['POST'])
 def register_sale():
