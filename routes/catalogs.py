@@ -6,10 +6,7 @@ from models.catalogs import Category, Supplier, Customer
 catalogs_bp = Blueprint('catalogs', __name__)
 
 
-# ==========================================
-# 1. CATEGORIES (Categorías)
-# ==========================================
-
+# Categorias CRUD
 @catalogs_bp.route('/categories', methods=['GET'])
 def get_categories():
     # CORRECCIÓN: Leer parámetro ?all=true
@@ -86,11 +83,7 @@ def delete_category(id):
     db.session.commit()
     return jsonify({'message': 'Category deleted (soft)'}), 200
 
-
-# ==========================================
-# 2. SUPPLIERS (Proveedores)
-# ==========================================
-
+# Proveedores CRUD
 @catalogs_bp.route('/suppliers', methods=['GET'])
 def get_suppliers():
     # CORRECCIÓN: Leer parámetro ?all=true
@@ -173,10 +166,7 @@ def delete_supplier(id):
     return jsonify({'message': 'Supplier deleted'}), 200
 
 
-# ==========================================
-# 3. CUSTOMERS (Clientes)
-# ==========================================
-
+# Clientes CRUD
 @catalogs_bp.route('/customers', methods=['GET'])
 def get_customers():
     # CORRECCIÓN: Leer parámetro ?all=true
