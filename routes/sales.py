@@ -25,7 +25,7 @@ def get_sales():
     if start_date:
         query = query.filter(Sale.date >= start_date)
     if end_date:
-        query = query.filter(Sale.date <= end_date)
+        query = query.filter(Sale.date <= f"{end_date} 23:59:59")
 
     sales = query.all()
 
@@ -142,3 +142,32 @@ def register_sale():
         except Exception as e:
             db.session.rollback()
             return jsonify({'error': str(e)}), 400
+
+# Cancelar venta
+@sales_bp.route('/<int:id>', methods=['DELETE'])
+def cancel_sale(id):
+    # Lock para proteccion
+    with sale_lock:
+        try:
+            # Buscar venta
+            sale = Sale.query.get(id)
+
+            if not sale:
+                return jsonify({'error': 'Venta no encontrada o ya fue eliminada'})
+
+            # Restaurar stock
+            for detail in sale.details:
+                if detail.product:
+                    detail.product.actual_stock = float(detail.product.actual_stock) + float(detail.amount)
+
+            db.session.delete(sale)
+            db.session.commit()
+
+            # Notificar via socket
+            socketio.emit('inventory_updated', {'message': f'Venta {id} cancelada, stock restaurado'})
+
+            return jsonify({'message': 'Venta cancelada y stock restaurado'}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500

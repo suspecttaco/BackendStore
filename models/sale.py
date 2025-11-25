@@ -34,6 +34,7 @@ class SaleDetail(db.Model):
     subtotal = db.Column(db.Numeric(10, 2), nullable=False)
     discount = db.Column(db.Numeric(10, 2), default=0)
 
+    # Relaciones
     product = db.relationship('Product')
 
 
