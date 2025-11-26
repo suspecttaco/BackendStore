@@ -1,4 +1,6 @@
 # File routes/dashboard.py
+import logging
+
 from flask import Blueprint, jsonify
 from sqlalchemy import func, cast, Date
 from datetime import datetime, date
@@ -7,6 +9,8 @@ from models.sale import Sale
 from models.product import Product, StockAlert
 
 dashboard_bp = Blueprint('dashboard', __name__)
+
+logger = logging.getLogger(__name__)
 
 @dashboard_bp.route('/stats', methods=['GET'])
 def get_dashboard_stats():
@@ -30,6 +34,7 @@ def get_dashboard_stats():
         # Total de productos activos
         total_products = Product.query.filter_by(active=True).count()
 
+        logger.info("Estadisticas consultadas - 200")
         return jsonify({
             'total_sales': float(total_sales_today),
             'sales_count': sales_count_today,
@@ -38,4 +43,5 @@ def get_dashboard_stats():
             'date': today.isoformat()
         }), 200
     except Exception as e:
+        logger.error(f"Error al consultar estadisticas - 500 - {str(e)}")
         return jsonify({'error': str(e)}), 500

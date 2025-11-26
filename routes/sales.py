@@ -1,8 +1,8 @@
 # File routes/sales.py
 import threading
+import logging
 from datetime import datetime
 
-from dns.e164 import query
 from flask import Blueprint, request, jsonify
 from models import db
 from models.product import Product
@@ -12,6 +12,8 @@ from services.socket_events import socketio
 sales_bp = Blueprint('sales', __name__)
 
 sale_lock = threading.Lock()
+
+logger = logging.getLogger(__name__)
 
 # Obtener ventas
 @sales_bp.route('/', methods=['GET'])
@@ -41,6 +43,7 @@ def get_sales():
             'customer': s.customer.name if s.customer else 'Publico General'
         })
 
+    logger.info("Historial de ventas consultado - 200")
     return jsonify(result), 200
 
 # Obtener venta especifica
@@ -49,6 +52,7 @@ def get_sale_details(id):
     sale = Sale.query.get_or_404(id)
 
     # Regresar venta con productos
+    logger.info("Venta consultada - 200")
     return jsonify({
         'id': sale.id,
         'date': sale.date.isoformat(),
@@ -69,11 +73,13 @@ def register_sale():
     data = request.get_json()
 
     if not data or 'user_id' not in data or 'products' not in data:
+        logger.error("Error al procesar la venta - Datos incompletos - 400")
         return jsonify({'error': 'Datos incompletos'}), 400
 
     items = data['products']
 
     if not items:
+        logger.error("Error al procesar la venta - El carrito esta vacio - 400")
         return jsonify({'error': 'El carrito esta vacio'}), 400
 
     with sale_lock:
@@ -133,6 +139,7 @@ def register_sale():
                 'sale_id': new_sale.id
             })
 
+            logger.info("Venta registrada - 201")
             return jsonify({
                 'message': 'Venta registrada',
                 'sale_id': new_sale.id,
@@ -141,6 +148,7 @@ def register_sale():
 
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error al registrar la venta - 400 - {str(e)}")
             return jsonify({'error': str(e)}), 400
 
 # Cancelar venta
@@ -153,6 +161,7 @@ def cancel_sale(id):
             sale = Sale.query.get(id)
 
             if not sale:
+                logger.error("Venta no encontrada o ya fue eliminada")
                 return jsonify({'error': 'Venta no encontrada o ya fue eliminada'})
 
             # Restaurar stock
@@ -166,8 +175,10 @@ def cancel_sale(id):
             # Notificar via socket
             socketio.emit('inventory_updated', {'message': f'Venta {id} cancelada, stock restaurado'})
 
+            logger.info("Venta cancelada y stock restaurado - 200")
             return jsonify({'message': 'Venta cancelada y stock restaurado'}), 200
 
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error al cancelar la venta #{id} - 500 - {str(e)}")
             return jsonify({'error': str(e)}), 500

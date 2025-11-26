@@ -1,21 +1,25 @@
 # File services/socket_events.py
+import logging
+
 from flask_socketio import SocketIO, emit
 
 # Instacia global de socketio
 socketio = SocketIO()
+
+logger = logging.getLogger(__name__)
 
 def register_socket_events(socketio_app):
     # Registrar eventos del websocket
 
     @socketio_app.on('connect')
     def handle_connect():
-        print('Client connected to websocket')
+        logger.info("Cliente conectado a websocket")
 
     @socketio_app.on('disconnect')
     def handle_disconnect():
-        print('Client disconnected')
+        logger.info("Cliente desconectado de websocket")
 
     @socketio_app.on('join_inventory')
     def handle_join_inventory(data):
-        # Cliente se une a sala de actualizaciones de inventario
-        print('Client joined to inventory room')
+        # Implementacion detallada a futuro
+        logger.info("Cliente añadido a sala de actualizacion de inventario")

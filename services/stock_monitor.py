@@ -1,6 +1,7 @@
 # File services/stock_monitor.py
 import time
 import threading
+import logging
 from models import db
 from models.product import Product, StockAlert
 from services.socket_events import socketio
@@ -11,9 +12,10 @@ class StockMonitor(threading.Thread):
         self.app = app
         self.daemon = True
         self.running = True
+        self.logger = logging.getLogger('StockMonitor')
 
     def run(self):
-        print("Stock monitoring started (checking every 30s)")
+        self.logger.info("Monitor de stock incializado (revisando cada 30s)")
 
         # Agregar contexto de app
         with self.app.app_context():
@@ -21,7 +23,7 @@ class StockMonitor(threading.Thread):
                 try:
                     self.check_stock()
                 except Exception as e:
-                    print(f"[ERROR] stock monitor fail: {e}")
+                    self.logger.error(f"Fallo en el monitor de stock: {e}")
 
                 db.session.remove()
                 time.sleep(30)
@@ -74,12 +76,12 @@ class StockMonitor(threading.Thread):
             db.session.commit()
             # Emitir alerta via socket
             if send_alerts:
-                print(f"[ALERT] Low stock for {len(send_alerts)} products")
+                self.logger.warning(f"Stock bajo para {len(send_alerts)} productos")
                 socketio.emit('low_stock_alert', {
                     'products': send_alerts
                 })
 
             # Opcional: Log para ver en consola que se resolvió
             if resolved_alerts:
-                print(f"[INFO] Resolved {len(resolved_alerts)} alerts")
+                self.logger.info(f"{len(resolved_alerts)} alertas resueltas")
                 socketio.emit('stock_alert_resolved', {'products': resolved_names})

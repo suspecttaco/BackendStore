@@ -1,7 +1,11 @@
 # File routes/catalogs.py
+import logging
+
 from flask import Blueprint, request, jsonify
 from models import db
 from models.catalogs import Category, Supplier, Customer
+
+logger = logging.getLogger(__name__)
 
 catalogs_bp = Blueprint('catalogs', __name__)
 
@@ -26,12 +30,15 @@ def get_categories():
             'parent_id': c.parent_id,
             'active': c.active
         })
+
+    logger.info("Categorias consultadas - 200")
     return jsonify(result), 200
 
 
 @catalogs_bp.route('/categories/<int:id>', methods=['GET'])
 def get_category(id):
     category = Category.query.get_or_404(id)
+    logger.info(f"Categoria #{id} consultada - 200")
     return jsonify({
         'id': category.id,
         'name': category.name,
@@ -45,6 +52,7 @@ def get_category(id):
 def create_category():
     data = request.get_json()
     if not data or 'name' not in data:
+        logger.error("Eror al crear categoria - Faltan datos - 400")
         return jsonify({'error': 'Name is required'}), 400
 
     new_cat = Category(
@@ -55,6 +63,7 @@ def create_category():
     )
     db.session.add(new_cat)
     db.session.commit()
+    logger.info("Categoria creada - 200")
     return jsonify({'id': new_cat.id, 'name': new_cat.name}), 201
 
 
@@ -70,9 +79,11 @@ def update_category(id):
         if 'active' in data: category.active = data['active']
 
         db.session.commit()
+        logger.info(f"Categoria #{id} actualizada - 200")
         return jsonify({'message': 'Category updated successfully'}), 200
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error al actualizar categoria #{id} - 500 - {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -81,6 +92,7 @@ def delete_category(id):
     category = Category.query.get_or_404(id)
     category.active = False
     db.session.commit()
+    logger.info(f"Categoria #{id} desactivada - 200")
     return jsonify({'message': 'Category deleted (soft)'}), 200
 
 # Proveedores CRUD
@@ -94,6 +106,9 @@ def get_suppliers():
         query = query.filter_by(active=True)
 
     suppliers = query.all()
+
+    logger.info("Proveedores consultados - 200")
+
     return jsonify([{
         'id': s.id,
         'name': s.name,
@@ -108,6 +123,7 @@ def get_suppliers():
 @catalogs_bp.route('/suppliers/<int:id>', methods=['GET'])
 def get_supplier(id):
     supplier = Supplier.query.get_or_404(id)
+    logger.info(f"Proveedor #{id} consultado - 200")
     return jsonify({
         'id': supplier.id,
         'name': supplier.name,
@@ -123,6 +139,7 @@ def get_supplier(id):
 def create_supplier():
     data = request.get_json()
     if not data or 'name' not in data:
+        logger.error("Error al crear Proveedor - Faltan datos - 400")
         return jsonify({'error': 'Name is required'}), 400
 
     new_sup = Supplier(
@@ -135,6 +152,7 @@ def create_supplier():
     )
     db.session.add(new_sup)
     db.session.commit()
+    logger.info("Proveedor creado - 200")
     return jsonify({'id': new_sup.id, 'message': 'Supplier created'}), 201
 
 
@@ -152,9 +170,11 @@ def update_supplier(id):
         if 'active' in data: supplier.active = data['active']
 
         db.session.commit()
+        logger.info(f"Proveedor #{id} actualizado - 200")
         return jsonify({'message': 'Supplier updated'}), 200
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error al actualizar Proveedor #{id} - 200 - {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -163,6 +183,7 @@ def delete_supplier(id):
     supplier = Supplier.query.get_or_404(id)
     supplier.active = False
     db.session.commit()
+    logger.info(f"Proveedor #{id} desactivado - 200")
     return jsonify({'message': 'Supplier deleted'}), 200
 
 
@@ -177,6 +198,7 @@ def get_customers():
         query = query.filter_by(active=True)
 
     customers = query.all()
+    logger.info("Clientes consultados - 200")
     return jsonify([{
         'id': c.id,
         'name': c.name,
@@ -191,6 +213,7 @@ def get_customers():
 @catalogs_bp.route('/customers/<int:id>', methods=['GET'])
 def get_customer(id):
     customer = Customer.query.get_or_404(id)
+    logger.info(f"Cliente #{id} consultado - 200")
     return jsonify({
         'id': customer.id,
         'name': customer.name,
@@ -206,6 +229,7 @@ def get_customer(id):
 def create_customer():
     data = request.get_json()
     if not data or 'name' not in data:
+        logger.error("Error al crear Cliente - Faltan datos - 400")
         return jsonify({'error': 'Name is required'}), 400
 
     new_cust = Customer(
@@ -217,6 +241,7 @@ def create_customer():
     )
     db.session.add(new_cust)
     db.session.commit()
+    logger.info("Cliente creado - 200")
     return jsonify({'id': new_cust.id, 'message': 'Customer created'}), 201
 
 
@@ -233,9 +258,11 @@ def update_customer(id):
         if 'active' in data: customer.active = data['active']
 
         db.session.commit()
+        logger.info(f"Cliente #{id} actualizado - 200")
         return jsonify({'message': 'Customer updated'}), 200
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error al actualizar Cliente #{id} - 500 - {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -244,4 +271,5 @@ def delete_customer(id):
     customer = Customer.query.get_or_404(id)
     customer.active = False
     db.session.commit()
+    logger.info(f"Cliente #{id} desactivado - 200")
     return jsonify({'message': 'Customer deleted'}), 200
