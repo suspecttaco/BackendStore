@@ -62,8 +62,13 @@ class StockMonitor(threading.Thread):
             Product.actual_stock > Product.minimum_stock
         ).all()
 
+        resolved_names = []  # Lista para guardar nombres
+
         for alert in resolved_alerts:
             alert.resolved = True
+            # Guardamos el nombre para notificar
+            if alert.product:
+                resolved_names.append(alert.product.name)
 
         if send_alerts or resolved_alerts:
             db.session.commit()
@@ -77,3 +82,4 @@ class StockMonitor(threading.Thread):
             # Opcional: Log para ver en consola que se resolvió
             if resolved_alerts:
                 print(f"[INFO] Resolved {len(resolved_alerts)} alerts")
+                socketio.emit('stock_alert_resolved', {'products': resolved_names})

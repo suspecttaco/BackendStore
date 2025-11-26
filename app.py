@@ -50,12 +50,12 @@ def create_app():
     app.register_blueprint(catalogs_bp, url_prefix='/api/catalogs')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 
-    if not getattr(app, 'monitor_started', False):
-        # Iniciar monitor de stock
-        monitor = StockMonitor(app)
-        socketio.start_background_task(monitor.run)
-        app.monitor_started = True
-        print("monitor started")
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.config['DEBUG']:
+        if not getattr(app, 'monitor_started', False):
+            monitor = StockMonitor(app)
+            socketio.start_background_task(monitor.run)
+            app.monitor_started = True
+            print("Stock Monitor Started (Single Instance)")
 
     return app
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # Para desarrollo local
     if os.getenv('FLASK_ENV') == 'development':
         print("Server running at http://localhost:5000")
-        socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+        socketio.run(app, host='0.0.0.0', port=5000, debug=False)
     else:
         # Para producción (Render usa gunicorn)
         print("Production mode - use gunicorn")
