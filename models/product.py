@@ -39,6 +39,7 @@ class Product(db.Model):
             'stock': float(self.actual_stock),
             'min_stock': float(self.minimum_stock),
             'category_id': self.category_id,
+            'category': self.category.name if self.category else "Sin Categoria",
             'active': self.active
         }
 

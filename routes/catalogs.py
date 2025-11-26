@@ -97,7 +97,7 @@ def get_suppliers():
     return jsonify([{
         'id': s.id,
         'name': s.name,
-        'contact': s.contact_name,
+        'contact_name': s.contact_name,
         'phone': s.phone,
         'email': s.email,
         'address': s.address,

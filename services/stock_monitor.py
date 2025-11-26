@@ -29,7 +29,7 @@ class StockMonitor(threading.Thread):
     def check_stock(self):
         # Busca productos donde el stock actual es menor al minimo
         low_stock_products = Product.query.filter(
-            Product.actual_stock < Product.minimum_stock,
+            Product.actual_stock <= Product.minimum_stock,
             Product.active == True
         ).all()
 
@@ -59,7 +59,7 @@ class StockMonitor(threading.Thread):
         # Cerrar alertas en caso de reposicion de stock
         resolved_alerts = db.session.query(StockAlert).join(Product).filter(
             StockAlert.resolved == False,
-            Product.actual_stock >= Product.minimum_stock
+            Product.actual_stock > Product.minimum_stock
         ).all()
 
         for alert in resolved_alerts:
