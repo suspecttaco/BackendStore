@@ -19,3 +19,6 @@ class Config:
     SQLALCHEMY_DATABASE_URI = SQL_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY')
+
+    # Puerto para el servidor (Render usa variable PORT)
+    PORT = int(os.getenv('PORT', 5000))

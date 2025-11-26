@@ -2,6 +2,9 @@
 import eventlet
 eventlet.monkey_patch()
 
+import os
+from dotenv import load_dotenv
+
 from flask import Flask
 from config import Config
 from models import db
@@ -63,6 +66,10 @@ if __name__ == "__main__":
         db.create_all()
         print("all tables and routes created successfully")
 
-    print("Server running at http://localhost:5000")
-    # Cambio de app.run a sockekio.run
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    # Para desarrollo local
+    if os.getenv('FLASK_ENV') == 'development':
+        print("Server running at http://localhost:5000")
+        socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    else:
+        # Para producción (Render usa gunicorn)
+        print("Production mode - use gunicorn")
