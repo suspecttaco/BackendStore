@@ -8,7 +8,8 @@ import os
 import logging
 from logging.config import dictConfig
 
-from flask import Flask
+from flask import Flask, jsonify
+from datetime import datetime
 from config import Config
 from models import db
 from flask_cors import CORS
@@ -95,6 +96,11 @@ def create_app():
     return _app
 
 app = create_app()
+
+# Endpoint para Keep-Alive
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "alive", "timestamp": datetime.utcnow().isoformat()}), 200
 
 if __name__ == "__main__":
 
