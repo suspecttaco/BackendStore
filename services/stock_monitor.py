@@ -2,6 +2,7 @@
 import time
 import threading
 import logging
+
 from models import db
 from models.product import Product, StockAlert
 from services.socket_events import socketio
@@ -29,6 +30,7 @@ class StockMonitor(threading.Thread):
                 time.sleep(30)
 
     def check_stock(self):
+        self.logger.info("Revisando Stock...")
         # Busca productos donde el stock actual es menor al minimo
         low_stock_products = Product.query.filter(
             Product.actual_stock <= Product.minimum_stock,

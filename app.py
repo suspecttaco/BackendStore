@@ -1,7 +1,5 @@
 # File app.py
 import eventlet
-from sqlalchemy import nullsfirst
-
 eventlet.monkey_patch()
 
 import os
